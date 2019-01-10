@@ -1,0 +1,27 @@
+{
+    "name": "aslong/laravel-database-backup",
+    "description": "",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "C.Jason",
+            "email": "chenjxlg@163.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.1.3",
+        "laravel/framework": "*"
+    },
+    "autoload": {
+        "psr-0": {
+            "AsLong\\Backup": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "AsLong\\Backup\\ServiceProvider"
+            ]
+        }
+    }
+}
