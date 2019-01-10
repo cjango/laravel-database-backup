@@ -11,17 +11,27 @@ class BackupDatabase extends Command
 {
     /**
      * The name and signature of the console command.
-     *
      * @var string
      */
     protected $signature = 'db:backup';
 
     /**
      * The console command description.
-     *
      * @var string
      */
     protected $description = 'Backup the database';
+
+    /**
+     * 备份目录
+     * @var string
+     */
+    protected $backDir;
+
+    /**
+     * 备份留存时间（天）
+     * @var integer
+     */
+    protected $days;
 
     /**
      * Create a new command instance.
@@ -32,13 +42,12 @@ class BackupDatabase extends Command
     {
         parent::__construct();
 
-        $this->process = new Process(sprintf(
-            'mysqldump -u%s -p%s %s > %s',
-            config('database.connections.mysql.username'),
-            config('database.connections.mysql.password'),
-            config('database.connections.mysql.database'),
-            storage_path('backups/backup_' . date('Y-m-d') . '.sql')
-        ));
+        $this->backDir = storage_path('backups/');
+        $this->days    = 7;
+
+        if (!is_dir($this->backDir)) {
+            mkdir($this->backDir, 0755, true);
+        }
     }
 
     /**
@@ -48,14 +57,22 @@ class BackupDatabase extends Command
      */
     public function handle()
     {
+        $this->process = new Process(sprintf(
+            'mysqldump -u%s -p%s %s > %s',
+            config('database.connections.mysql.username'),
+            config('database.connections.mysql.password'),
+            config('database.connections.mysql.database'),
+            $this->backDir . 'backup_' . date('Y-m-d_H:i:s') . '.sql'
+        ));
+
         try {
             // 删除N天之前的备份
-            $directory = storage_path('backups/');
-            $files     = scandir($directory);
+            $backDir = $this->backDir;
+            $files   = scandir($backDir);
 
             foreach ($files as $file) {
-                if (!in_array($file, ['.', '..']) && Carbon::now()->diffIndays(substr($file, 7, 10)) >= env('DB_BACKUP_DAYS', 5)) {
-                    unlink($directory . $file);
+                if (!in_array($file, ['.', '..']) && Carbon::now()->diffIndays(substr($file, 7, 10)) >= $this->days) {
+                    unlink($backDir . $file);
                 }
             }
 
